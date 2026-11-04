@@ -50,7 +50,7 @@ textarea{width:100%;font:inherit;border-radius:10px;border:1px solid var(--b);pa
 <div class="tabs" id="tabs"></div><main id="v"><p class="m">Loading...</p></main>
 <div id="toast"></div><div id="mod" class="mod" style="display:none"></div>
 <script>
-const GAS='https://script.google.com/macros/s/AKfycbzV4n4XPgGYcVMRmxuWoBoZWxSpeuZV3Y0b7BfWrASJIsctkOeKnlLRNO0FBWIh_vhZiA/exec';
+const GAS='PASTE_YOUR_WEB_APP_URL_HERE';
 const $=i=>document.getElementById(i),S=JSON.parse(sessionStorage.u||'null');
 if(!S||S.role!='faculty'||S.mustReset)location='index.html';
 const E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -98,22 +98,36 @@ function vSt(){
  return D.electives.map(e=>{const st=D.students.filter(s=>s.year==e.Year),sub=new Set(D.selections.filter(s=>s.ElectiveID==e.ID).map(s=>s.Email)),ns=st.filter(s=>!sub.has(s.email));
  return `<div class="card"><h3>${E(e.Name)} <span class="m">Year ${e.Year}</span></h3><div class="st"><div><b>${st.length}</b>Total</div><div><b class="ok">${st.length-ns.length}</b>Submitted</div><div><b class="bad">${ns.length}</b>Not submitted</div></div>
  ${ns.length?`<details style="margin-top:10px"><summary>Not submitted students</summary>${ns.map(s=>`<div class="row"><span>${E(s.regno)} ${E(s.name)}</span><span class="m">Sec ${E(s.section)}</span></div>`).join('')}</details>`:''}</div>`}).join('')||'<div class="card">No electives yet.</div>'}
-function vRp(){return `<div class="card"><h3>Year and section report</h3><div class="r"><select id="ry" onchange="secs();rpPrev()">${yrs}</select><select id="rs" onchange="rpPrev()"></select><button onclick="xl()">Excel</button><button onclick="pdf()">PDF</button></div></div><div class="card tw" id="pv"></div>`}
-function secs(){const y=$('ry').value,s=[...new Set(D.students.filter(x=>x.year==y).map(x=>x.section))].sort();$('rs').innerHTML='<option value="">All sections</option>'+s.map(x=>`<option>${E(x)}</option>`).join('')}
-function rpPrev(){if(!$('rs').options.length)secs();RP=rep();$('pv').innerHTML=`<table><tr>${RP.head.map(h=>`<th>${E(h)}</th>`).join('')}</tr>${RP.body.map(r=>`<tr>${r.map(c=>`<td>${E(c)}</td>`).join('')}</tr>`).join('')}</table>`}
+function vRp(){return `<div class="card"><h3>Reports</h3><div class="r"><select id="rm" onchange="rpPrev()"><option value="s">Student-wise (Year/Section)</option><option value="c">Course-wise (students list)</option></select><select id="ry" onchange="secs();rpPrev()">${yrs}</select><select id="rs" onchange="rpPrev()"></select><select id="re" onchange="rpPrev()"></select><button onclick="xl()">Excel</button><button onclick="pdf()">PDF</button></div></div><div class="card tw" id="pv"></div>`}
+function secs(){const y=$('ry').value,s=[...new Set(D.students.filter(x=>x.year==y).map(x=>x.section))].sort();$('rs').innerHTML='<option value="">All sections</option>'+s.map(x=>`<option>${E(x)}</option>`).join('');$('re').innerHTML='<option value="">All electives</option>'+D.electives.filter(e=>e.Year==y).map(e=>`<option value="${e.ID}">${E(e.Name)}</option>`).join('')}
+function tbl(h,b){return `<table><tr>${h.map(x=>`<th>${E(x)}</th>`).join('')}</tr>${b.map(r=>`<tr>${r.map(c=>`<td>${E(c)}</td>`).join('')}</tr>`).join('')}</table>`}
+function rpPrev(){if(!$('rs').options.length)secs();RP=$('rm').value=='c'?repC():rep();$('re').style.display=RP.groups?'':'none';
+ $('pv').innerHTML=RP.groups?(RP.groups.map(g=>`<h3 style="margin-top:14px">${E(g.title)}</h3>${tbl(RP.head,g.rows)}`).join('')||'<p class="m">No courses for this year.</p>'):tbl(RP.head,RP.body)}
 function rep(){
  const y=$('ry').value,sc=$('rs').value,els=D.electives.filter(e=>e.Year==y),
  st=D.students.filter(s=>s.year==y&&(!sc||s.section==sc)).sort((a,b)=>String(a.regno).localeCompare(String(b.regno)));
  return{head:['S.No','Reg No','Name','Section',...els.map(e=>e.Name)],
  body:st.map((s,i)=>[i+1,s.regno,s.name,s.section,...els.map(e=>{const m=D.selections.find(x=>x.Email==s.email&&x.ElectiveID==e.ID),c=m&&D.courses.find(c=>c.ID==m.CourseID);return c?c.Code+' - '+c.Name:'Not submitted'})]),
  T:[D.settings.College,D.settings.Department,`Academic Year: ${D.settings.AcademicYear}  |  Semester: ${D.settings.Semester}`,`Professional Elective Report - Year ${y}${sc?' - Section '+sc:' - All Sections'}`]}}
-function xl(){rpPrev();const n=RP.head.length,ws=XLSX.utils.aoa_to_sheet([...RP.T.map(t=>[t]),[],RP.head,...RP.body]);
- ws['!merges']=[0,1,2,3].map(r=>({s:{r,c:0},e:{r,c:n-1}}));ws['!cols']=RP.head.map((h,i)=>({wch:i<2?12:i==2?26:i==3?9:34}));
- const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Report');XLSX.writeFile(wb,'Elective_Report.xlsx')}
-function pdf(){rpPrev();const d=new jspdf.jsPDF({orientation:'landscape'}),w=d.internal.pageSize.getWidth();
+function repC(){
+ const y=$('ry').value,sc=$('rs').value,ei=$('re').value,groups=[];
+ D.electives.filter(e=>e.Year==y&&(!ei||e.ID==ei)).forEach(e=>D.courses.filter(c=>c.ElectiveID==e.ID).forEach(c=>{
+  const st=D.selections.filter(m=>m.CourseID==c.ID).map(m=>D.students.find(s=>s.email==m.Email)).filter(s=>s&&(!sc||s.section==sc)).sort((a,b)=>String(a.regno).localeCompare(String(b.regno)));
+  groups.push({title:`${e.Name} - ${c.Code} - ${c.Name} (Students: ${st.length} / Max: ${c.Max})`,rows:st.map((s,i)=>[i+1,s.regno,s.name,s.year,s.section])})}));
+ return{head:['S.No','Roll No','Name','Year','Section'],groups,
+ T:[D.settings.College,D.settings.Department,`Academic Year: ${D.settings.AcademicYear}  |  Semester: ${D.settings.Semester}`,`Course-wise Professional Elective Report - Year ${y}${sc?' - Section '+sc:' - All Sections'}`]}}
+function xl(){rpPrev();const n=RP.head.length,a=RP.T.map(t=>[t]),mg=[0,1,2,3];a.push([]);
+ if(RP.groups)RP.groups.forEach(g=>{mg.push(a.length);a.push([g.title]);a.push(RP.head);g.rows.forEach(r=>a.push(r));a.push([])});
+ else{a.push(RP.head);RP.body.forEach(r=>a.push(r))}
+ const ws=XLSX.utils.aoa_to_sheet(a);ws['!merges']=mg.map(r=>({s:{r,c:0},e:{r,c:n-1}}));ws['!cols']=RP.head.map((h,i)=>({wch:i<2?12:i==2?26:i==3?9:RP.groups?10:34}));
+ const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Report');XLSX.writeFile(wb,RP.groups?'Course_Wise_Report.xlsx':'Elective_Report.xlsx')}
+function pdf(){rpPrev();const d=new jspdf.jsPDF({orientation:RP.groups?'portrait':'landscape'}),w=d.internal.pageSize.getWidth();
  d.setFont('helvetica','bold').setFontSize(15);d.text(RP.T[0],w/2,14,{align:'center'});d.setFontSize(12);d.text(RP.T[1],w/2,21,{align:'center'});
  d.setFont('helvetica','normal').setFontSize(11);d.text(RP.T[2],w/2,28,{align:'center'});d.text(RP.T[3],w/2,35,{align:'center'});
- d.autoTable({head:[RP.head],body:RP.body,startY:41,styles:{fontSize:9},headStyles:{fillColor:[79,70,229]}});d.save('Elective_Report.pdf')}
+ if(RP.groups){let y=44;RP.groups.forEach(g=>{if(y>260){d.addPage();y=16}d.setFont('helvetica','bold').setFontSize(10);d.text(g.title,14,y);
+  d.autoTable({head:[RP.head],body:g.rows.length?g.rows:[['','No students','','','']],startY:y+3,styles:{fontSize:9},headStyles:{fillColor:[79,70,229]}});y=d.lastAutoTable.finalY+10})}
+ else d.autoTable({head:[RP.head],body:RP.body,startY:41,styles:{fontSize:9},headStyles:{fillColor:[79,70,229]}});
+ d.save(RP.groups?'Course_Wise_Report.pdf':'Elective_Report.pdf')}
 function vSe(){const s=D.settings;return `<div class="card"><h3>Report settings</h3>${[['College','College name'],['Department','Department'],['AcademicYear','Academic year'],['Semester','Semester']].map(([k,l])=>`<label class="m">${l}</label><input id="s_${k}" value="${E(s[k])}">`).join('')}<br><button onclick="saveS()">Save settings</button></div>`}
 function saveS(){const o={};['College','Department','AcademicYear','Semester'].forEach(k=>o[k]=$('s_'+k).value.trim());act('saveSettings',{settings:o})}
 load();if(sessionStorage.ins!='1')ins();
