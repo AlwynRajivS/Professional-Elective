@@ -40,7 +40,7 @@ canvas{position:fixed;inset:0;pointer-events:none;z-index:40}
 <canvas id="cv"></canvas><main><div id="hero"></div><div id="list"><p class="m">Loading...</p></div></main>
 <div id="toast"></div><div id="mod" class="mod" style="display:none"></div>
 <script>
-const GAS='https://script.google.com/macros/s/AKfycbw6z3M4FSLpy5maObLhKAbzhwjWXQHoCoJVcY5CocNm5aLL3ltmYgvaT0TXbKy8bBn1lA/exec';
+const GAS='https://script.google.com/macros/s/AKfycbzLNLTmX3AjaCs__574yZm3SDW2KVG3CZzYnVjvJt2H6R3XwbEe_wIA0BSs3kVkcKU2QA/exec';
 const $=i=>document.getElementById(i),S=JSON.parse(sessionStorage.u||'null');
 if(!S||S.role!='student'||S.mustReset)location='index.html';
 const E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
