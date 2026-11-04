@@ -40,7 +40,7 @@ h1{background:linear-gradient(90deg,var(--p),var(--p2));-webkit-background-clip:
  <div id="msg"></div>
 </div>
 <script>
-const GAS='https://script.google.com/macros/s/AKfycbzV4n4XPgGYcVMRmxuWoBoZWxSpeuZV3Y0b7BfWrASJIsctkOeKnlLRNO0FBWIh_vhZiA/exec';
+const GAS='https://script.google.com/macros/s/AKfycbw6z3M4FSLpy5maObLhKAbzhwjWXQHoCoJVcY5CocNm5aLL3ltmYgvaT0TXbKy8bBn1lA/exec';
 const $=i=>document.getElementById(i);
 function tg(){const t=document.documentElement.dataset.t=='dark'?'light':'dark';document.documentElement.dataset.t=t;localStorage.t=t}
 async function api(a,d={}){const s=JSON.parse(sessionStorage.u||'{}');const r=await fetch(GAS,{method:'POST',body:JSON.stringify({action:a,email:s.email,password:s.password,...d})});return r.json()}
