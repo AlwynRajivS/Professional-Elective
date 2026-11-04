@@ -40,12 +40,29 @@ h1{background:linear-gradient(90deg,var(--p),var(--p2));-webkit-background-clip:
  <div id="msg"></div>
 </div>
 <script>
-const GAS='https://script.google.com/macros/s/AKfycbzLNLTmX3AjaCs__574yZm3SDW2KVG3CZzYnVjvJt2H6R3XwbEe_wIA0BSs3kVkcKU2QA/exec';
+const GAS='https://script.google.com/macros/s/AKfycbxcM_Ofrl2EcKxFjqqY32LnJ3QFTeBFQlorsfKY_IwmFIfZ8X6HNRYsyYKUPM1GqQUw7A/exec';
 const $=i=>document.getElementById(i);
+const READ=['login','student','faculty'];
 function tg(){const t=document.documentElement.dataset.t=='dark'?'light':'dark';document.documentElement.dataset.t=t;localStorage.t=t}
-async function api(a,d={}){const s=JSON.parse(sessionStorage.u||'{}');const r=await fetch(GAS,{method:'POST',body:JSON.stringify({action:a,email:s.email,password:s.password,...d})});return r.json()}
+
+/* Timeout + retry (read actions only, so writes are never sent twice) */
+async function api(a,d={}){
+ const s=JSON.parse(sessionStorage.u||'{}');
+ const tries=READ.includes(a)?3:1;
+ for(let i=0;i<tries;i++){
+  const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),25000);
+  try{
+   const r=await fetch(GAS,{method:'POST',signal:ctl.signal,body:JSON.stringify({action:a,email:s.email,password:s.password,...d})});
+   return JSON.parse(await r.text());
+  }catch(x){
+   if(i==tries-1)throw x;
+   await new Promise(r=>setTimeout(r,1000*(i+1)));
+  }finally{clearTimeout(t)}
+ }
+}
 function go(u){location=u.role=='faculty'?'faculty.html':'student.html'}
 (async()=>{const u=JSON.parse(sessionStorage.u||'null');if(u&&!u.mustReset)go(u)})();
+
 async function login(){
  $('msg').textContent='';$('b1').disabled=true;
  sessionStorage.u=JSON.stringify({email:$('e').value.trim().toLowerCase(),password:$('p').value});
@@ -53,11 +70,15 @@ async function login(){
   if(!r.ok){sessionStorage.removeItem('u');$('msg').textContent=r.error;return}
   sessionStorage.u=JSON.stringify({...r.user,password:$('p').value});sessionStorage.ins='';
   if(r.user.mustReset){$('f1').classList.add('hid');$('f2').classList.remove('hid')}else go(r.user)
- }catch(x){sessionStorage.removeItem('u');$('msg').textContent='Cannot reach server. Check the GAS URL.'}
- $('b1').disabled=false}
+ }catch(x){sessionStorage.removeItem('u');$('msg').textContent='Server is busy or unreachable ('+x.name+'). Please try again.'}
+ finally{$('b1').disabled=false}}
+
 async function reset(){
  const a=$('n1').value;if(a!=$('n2').value){$('msg').textContent='Passwords do not match';return}
- $('b2').disabled=true;const r=await api('reset',{newPassword:a});
- if(!r.ok){$('msg').textContent=r.error;$('b2').disabled=false;return}
- const u=JSON.parse(sessionStorage.u);u.password=a;u.mustReset=false;sessionStorage.u=JSON.stringify(u);go(u)}
+ $('msg').textContent='';$('b2').disabled=true;
+ try{
+  const r=await api('reset',{newPassword:a});
+  if(!r.ok){$('msg').textContent=r.error;$('b2').disabled=false;return}
+  const u=JSON.parse(sessionStorage.u);u.password=a;u.mustReset=false;sessionStorage.u=JSON.stringify(u);go(u)
+ }catch(x){$('msg').textContent='Server is busy or unreachable ('+x.name+'). Please try again.';$('b2').disabled=false}}
 </script></body></html>
