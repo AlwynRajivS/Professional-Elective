@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Student - Professional Elective</title>
+<script>document.documentElement.dataset.t=localStorage.t||'light'</script>
+<style>
+:root{--bg:#eef2ff;--c:#fff;--t:#0f172a;--m:#64748b;--p:#4f46e5;--p2:#06b6d4;--b:#e2e8f0;--ok:#16a34a;--bad:#dc2626}
+[data-t=dark]{--bg:#0b1020;--c:#151b32;--t:#e5e7eb;--m:#94a3b8;--b:#252d4a}
+*{box-sizing:border-box;margin:0}
+body{font:15px system-ui,sans-serif;background:var(--bg);color:var(--t);min-height:100vh;transition:.3s}
+body::before{content:"";position:fixed;inset:-20%;z-index:-1;background:radial-gradient(circle at 20% 20%,#4f46e555,transparent 40%),radial-gradient(circle at 80% 80%,#06b6d444,transparent 40%);animation:f 10s ease-in-out infinite alternate}
+@keyframes f{to{transform:translate(4%,3%) rotate(6deg)}}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 16px;position:sticky;top:0;z-index:5;background:var(--c);border-bottom:1px solid var(--b)}
+.top b{display:block}.top small{color:var(--m)}
+main{max-width:760px;margin:auto;padding:12px 14px 40px}
+.card{background:var(--c);border:1px solid var(--b);border-radius:18px;padding:16px;margin:14px 0;box-shadow:0 8px 28px #0002;animation:in .5s both}
+@keyframes in{from{opacity:0;transform:translateY(16px)}}
+h2{font-size:1.1rem;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.pill{font-size:.75rem;padding:4px 10px;border-radius:99px;background:#16a34a22;color:var(--ok)}.pill.l{background:#dc262622;color:var(--bad)}
+.co{border:1px solid var(--b);border-radius:14px;padding:12px;margin-top:10px;transition:.2s}
+.co.sel{border-color:var(--ok);background:#16a34a14}.co:hover{transform:scale(1.01)}
+.bar{height:8px;border-radius:9px;background:var(--b);margin:8px 0;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--p),var(--p2));transition:width .6s}
+.bar i.f{background:var(--bad)}
+button{font:inherit;border:0;border-radius:10px;padding:9px 14px;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--p),var(--p2));transition:.2s}
+button:hover{transform:translateY(-2px)}button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.g{background:var(--b);color:var(--t)}.m{color:var(--m);font-size:.85rem}
+#toast{position:fixed;bottom:20px;left:50%;transform:translate(-50%,80px);background:#111827;color:#fff;padding:12px 18px;border-radius:12px;transition:.4s;z-index:20;max-width:90%;text-align:center}
+#toast.s{transform:translate(-50%,0)}
+.mod{position:fixed;inset:0;background:#000a;display:grid;place-items:center;padding:16px;z-index:30}
+.mod>div{background:var(--c);border-radius:18px;padding:22px;max-width:460px;width:100%;animation:in .4s}.mod li{margin:8px 0 8px 18px}
+canvas{position:fixed;inset:0;pointer-events:none;z-index:40}
+.card{backdrop-filter:blur(12px);background:color-mix(in srgb,var(--c) 82%,transparent)}.card:hover{box-shadow:0 14px 36px #4f46e544}
+.top b{background:linear-gradient(90deg,var(--p),var(--p2));-webkit-background-clip:text;color:transparent;font-size:1.15rem}
+.hero{padding:18px;border-radius:18px;color:#fff;background:linear-gradient(135deg,var(--p),var(--p2),#a855f7);background-size:200% 200%;animation:g 6s ease infinite;margin-top:14px}
+@keyframes g{50%{background-position:100% 50%}}.hero .bar{background:#fff4}.hero .bar i{background:#fff}
+.co.sel{animation:pulse 1.2s 2}@keyframes pulse{50%{box-shadow:0 0 0 8px #16a34a33}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style></head><body>
+<div class="top"><div><b id="nm">Student</b><small id="inf"></small></div>
+<div><button class="g" onclick="tg()">🌓</button> <button class="g" onclick="ins()">ℹ️</button> <button onclick="out()">Logout</button></div></div>
+<canvas id="cv"></canvas><main><div id="hero"></div><div id="list"><p class="m">Loading...</p></div></main>
+<div id="toast"></div><div id="mod" class="mod" style="display:none"></div>
+<script>
+const GAS='PASTE_YOUR_WEB_APP_URL_HERE';
+const $=i=>document.getElementById(i),S=JSON.parse(sessionStorage.u||'null');
+if(!S||S.role!='student'||S.mustReset)location='index.html';
+const E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function tg(){const t=document.documentElement.dataset.t=='dark'?'light':'dark';document.documentElement.dataset.t=t;localStorage.t=t}
+async function api(a,d={}){const r=await fetch(GAS,{method:'POST',body:JSON.stringify({action:a,email:S.email,password:S.password,...d})});return r.json()}
+function out(){sessionStorage.clear();location='index.html'}
+function toast(m){const t=$('toast');t.textContent=m;t.className='s';setTimeout(()=>t.className='',3500)}
+function ins(){$('mod').style.display='grid';$('mod').innerHTML=`<div><h2>General instructions</h2><ol>
+<li>Each elective below belongs to your year only.</li><li>Pick <b>one course</b> in every elective.</li>
+<li>Seats are first come, first served. If a course shows <b>Limit reached</b>, register another course.</li>
+<li>You can change your choice until faculty locks the elective 🔒.</li><li>Once locked, no changes are possible.</li>
+<li>Logout after you finish. Never share your password.</li></ol><br><button onclick="sessionStorage.ins=1;$('mod').style.display='none'">Got it</button></div>`}
+let D;
+async function load(){const r=await api('student');if(!r.ok){toast(r.error);return}D=r;draw()}
+function draw(){
+ $('nm').textContent=S.name;$('inf').textContent=`Year ${S.year} · Section ${S.section} · ${D.settings.AcademicYear} Sem ${D.settings.Semester}`;
+ const done=D.electives.filter(e=>D.mine.some(m=>m.ElectiveID==e.ID)).length,n=D.electives.length;$('hero').innerHTML=n?`<div class="hero"><b>Hello ${E(S.name)} 👋</b><div class="m" style="color:#fff">${done} of ${n} electives registered</div><div class="bar"><i style="width:${done/n*100}%"></i></div></div>`:'';
+ if(!D.electives.length){$('list').innerHTML='<div class="card">No electives have been opened for your year yet.</div>';return}
+ $('list').innerHTML=D.electives.map((e,i)=>{
+  const m=D.mine.find(x=>x.ElectiveID==e.ID),L=e.Locked=='YES';
+  return `<div class="card" style="animation-delay:${i*.08}s"><h2>${E(e.Name)}<span class="pill ${L?'l':''}">${L?'🔒 Locked':m?'Selected - editable':'Open'}</span></h2>`+
+  D.courses.filter(c=>c.ElectiveID==e.ID).map(c=>{
+   const full=c.taken>=c.Max,mine=m&&m.CourseID==c.ID,p=Math.min(100,c.taken/c.Max*100);
+   return `<div class="co ${mine?'sel':''}"><b>${E(c.Code)}</b> - ${E(c.Name)}<div class="bar"><i class="${full?'f':''}" style="width:${p}%"></i></div>
+   <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><span class="m">${full&&!mine?'⚠ Limit reached - register another course':c.taken+' / '+c.Max+' seats filled'}</span>
+   <button ${L||(full&&!mine)||mine?'disabled':''} onclick="pick('${e.ID}','${c.ID}')">${mine?'✔ Selected':'Select'}</button></div></div>`}).join('')+
+  (L&&!m?'<p class="m">Locked without a selection. Contact your faculty.</p>':'')+`</div>`}).join('')}
+async function pick(e,c){
+ const r=await api('select',{electiveId:e,courseId:c});toast(r.ok?'Course registered ✔':r.error);if(r.ok)boom();load()}
+function boom(){const c=$('cv'),x=c.getContext('2d');c.width=innerWidth;c.height=innerHeight;const P=Array.from({length:90},()=>({x:innerWidth/2,y:innerHeight/2,vx:(Math.random()-.5)*14,vy:Math.random()*-14,c:`hsl(${Math.random()*360},90%,60%)`}));let f=0;(function a(){x.clearRect(0,0,c.width,c.height);P.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.45;x.fillStyle=p.c;x.fillRect(p.x,p.y,7,7)});if(++f<70)requestAnimationFrame(a);else x.clearRect(0,0,c.width,c.height)})()}
+load();if(sessionStorage.ins!='1')ins();
+</script></body></html>

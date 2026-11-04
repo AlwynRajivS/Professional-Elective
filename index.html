@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Professional Elective Portal - Login</title>
+<script>document.documentElement.dataset.t=localStorage.t||'light'</script>
+<style>
+:root{--bg:#eef2ff;--c:#fff;--t:#0f172a;--m:#64748b;--p:#4f46e5;--p2:#06b6d4;--b:#e2e8f0;--bad:#dc2626}
+[data-t=dark]{--bg:#0b1020;--c:#151b32;--t:#e5e7eb;--m:#94a3b8;--b:#252d4a}
+*{box-sizing:border-box;margin:0}
+body{font:15px system-ui,sans-serif;background:var(--bg);color:var(--t);min-height:100vh;display:grid;place-items:center;padding:16px;transition:.3s}
+body::before{content:"";position:fixed;inset:-20%;z-index:-1;background:radial-gradient(circle at 20% 20%,#4f46e566,transparent 40%),radial-gradient(circle at 80% 80%,#06b6d455,transparent 40%);animation:f 10s ease-in-out infinite alternate}
+@keyframes f{to{transform:translate(4%,3%) rotate(6deg) scale(1.1)}}
+.card{width:100%;max-width:400px;background:var(--c);border:1px solid var(--b);border-radius:20px;padding:26px;box-shadow:0 20px 50px #0003;animation:in .6s}
+@keyframes in{from{opacity:0;transform:translateY(20px) scale(.97)}}
+h1{font-size:1.3rem;line-height:1.3}p.s{color:var(--m);margin:6px 0 18px;font-size:.9rem}
+input,button{font:inherit;width:100%;padding:12px;margin:6px 0;border-radius:12px;border:1px solid var(--b);background:var(--bg);color:var(--t)}
+input:focus{outline:2px solid var(--p)}
+button{border:0;cursor:pointer;color:#fff;background:linear-gradient(135deg,var(--p),var(--p2));font-weight:600;margin-top:12px;transition:.2s}
+button:hover{transform:translateY(-2px);box-shadow:0 8px 20px #4f46e555}button:disabled{opacity:.6}
+#th{position:fixed;top:12px;right:12px;width:44px;height:44px;border-radius:50%;padding:0;font-size:1.2rem}
+#msg{color:var(--bad);min-height:20px;font-size:.88rem;margin-top:8px}.hid{display:none}
+.o{position:fixed;border-radius:50%;filter:blur(2px);opacity:.5;z-index:-1;animation:fl 9s ease-in-out infinite alternate}
+.o:nth-of-type(1){width:120px;height:120px;background:#4f46e5;top:12%;left:8%}.o:nth-of-type(2){width:80px;height:80px;background:#06b6d4;bottom:14%;right:10%;animation-delay:2s}.o:nth-of-type(3){width:60px;height:60px;background:#ec4899;top:60%;left:18%;animation-delay:4s}
+@keyframes fl{to{transform:translateY(-40px) translateX(25px)}}
+.card{backdrop-filter:blur(14px);background:color-mix(in srgb,var(--c) 85%,transparent)}
+h1{background:linear-gradient(90deg,var(--p),var(--p2));-webkit-background-clip:text;color:transparent}
+.sp{background:none;color:var(--m);font-size:.8rem;margin:0;padding:4px;width:auto;box-shadow:none}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style></head><body>
+<button id="th" onclick="tg()" aria-label="Toggle theme">🌓</button>
+<i class="o"></i><i class="o"></i><i class="o"></i>
+<div class="card">
+ <h1>Kamaraj College of Engineering and Technology</h1>
+ <p class="s">Professional Elective Registration</p>
+ <div id="f1"><input id="e" type="email" placeholder="College mail ID" autocomplete="username">
+  <input id="p" type="password" placeholder="Password" autocomplete="current-password">
+  <button class="sp" onclick="p=document.getElementById('p');p.type=p.type=='password'?'text':'password'">👁 Show / hide password</button><button id="b1" onclick="login()">Login</button></div>
+ <div id="f2" class="hid"><p class="s">First login: set a new password (min 6 characters).</p>
+  <input id="n1" type="password" placeholder="New password"><input id="n2" type="password" placeholder="Confirm new password">
+  <button id="b2" onclick="reset()">Save password and continue</button></div>
+ <div id="msg"></div>
+</div>
+<script>
+const GAS='PASTE_YOUR_WEB_APP_URL_HERE';
+const $=i=>document.getElementById(i);
+function tg(){const t=document.documentElement.dataset.t=='dark'?'light':'dark';document.documentElement.dataset.t=t;localStorage.t=t}
+async function api(a,d={}){const s=JSON.parse(sessionStorage.u||'{}');const r=await fetch(GAS,{method:'POST',body:JSON.stringify({action:a,email:s.email,password:s.password,...d})});return r.json()}
+function go(u){location=u.role=='faculty'?'faculty.html':'student.html'}
+(async()=>{const u=JSON.parse(sessionStorage.u||'null');if(u&&!u.mustReset)go(u)})();
+async function login(){
+ $('msg').textContent='';$('b1').disabled=true;
+ sessionStorage.u=JSON.stringify({email:$('e').value.trim().toLowerCase(),password:$('p').value});
+ try{const r=await api('login');
+  if(!r.ok){sessionStorage.removeItem('u');$('msg').textContent=r.error;return}
+  sessionStorage.u=JSON.stringify({...r.user,password:$('p').value});sessionStorage.ins='';
+  if(r.user.mustReset){$('f1').classList.add('hid');$('f2').classList.remove('hid')}else go(r.user)
+ }catch(x){sessionStorage.removeItem('u');$('msg').textContent='Cannot reach server. Check the GAS URL.'}
+ $('b1').disabled=false}
+async function reset(){
+ const a=$('n1').value;if(a!=$('n2').value){$('msg').textContent='Passwords do not match';return}
+ $('b2').disabled=true;const r=await api('reset',{newPassword:a});
+ if(!r.ok){$('msg').textContent=r.error;$('b2').disabled=false;return}
+ const u=JSON.parse(sessionStorage.u);u.password=a;u.mustReset=false;sessionStorage.u=JSON.stringify(u);go(u)}
+</script></body></html>

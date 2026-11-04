@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Faculty - Professional Elective</title>
+<script>document.documentElement.dataset.t=localStorage.t||'light'</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+:root{--bg:#eef2ff;--c:#fff;--t:#0f172a;--m:#64748b;--p:#4f46e5;--p2:#06b6d4;--b:#e2e8f0;--ok:#16a34a;--bad:#dc2626}
+[data-t=dark]{--bg:#0b1020;--c:#151b32;--t:#e5e7eb;--m:#94a3b8;--b:#252d4a}
+*{box-sizing:border-box;margin:0}
+body{font:15px system-ui,sans-serif;background:var(--bg);color:var(--t);min-height:100vh;transition:.3s}
+body::before{content:"";position:fixed;inset:-20%;z-index:-1;background:radial-gradient(circle at 20% 20%,#4f46e555,transparent 40%),radial-gradient(circle at 80% 80%,#06b6d444,transparent 40%);animation:f 10s ease-in-out infinite alternate}
+@keyframes f{to{transform:translate(4%,3%) rotate(6deg)}}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 16px;position:sticky;top:0;z-index:5;background:var(--c);border-bottom:1px solid var(--b)}
+.top small{color:var(--m);display:block}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:10px 14px;max-width:900px;margin:auto}
+.tabs button{white-space:nowrap}.tabs .on{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff}
+main{max-width:900px;margin:auto;padding:0 14px 40px}
+.card{background:var(--c);border:1px solid var(--b);border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 8px 28px #0002;animation:in .45s both}
+@keyframes in{from{opacity:0;transform:translateY(14px)}}
+h2,h3{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
+input,select,button{font:inherit;border-radius:10px;border:1px solid var(--b);padding:9px 12px;background:var(--bg);color:var(--t);margin:3px 0}
+input,select{width:100%}
+.r{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;align-items:end}
+button{cursor:pointer;border:0;color:#fff;background:linear-gradient(135deg,var(--p),var(--p2));transition:.2s}
+button:hover{transform:translateY(-2px)}.g{background:var(--b);color:var(--t)}.d{background:var(--bad)}
+.m{color:var(--m);font-size:.85rem}.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--b)}
+.st{display:flex;gap:10px;flex-wrap:wrap}.st div{flex:1;min-width:90px;text-align:center;padding:10px;border-radius:12px;background:var(--bg)}
+.st b{font-size:1.4rem;display:block}.ok{color:var(--ok)}.bad{color:var(--bad)}
+.tw{overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:.85rem}td,th{border:1px solid var(--b);padding:6px 8px;text-align:left}th{background:var(--b)}
+#toast{position:fixed;bottom:20px;left:50%;transform:translate(-50%,80px);background:#111827;color:#fff;padding:12px 18px;border-radius:12px;transition:.4s;z-index:20;max-width:90%}
+#toast.s{transform:translate(-50%,0)}
+.mod{position:fixed;inset:0;background:#000a;display:grid;place-items:center;padding:16px;z-index:30}
+.mod>div{background:var(--c);border-radius:18px;padding:22px;max-width:480px;width:100%}.mod li{margin:8px 0 8px 18px}
+body{background-attachment:fixed}
+.card{backdrop-filter:blur(12px);background:color-mix(in srgb,var(--c) 82%,transparent);transition:.3s}.card:hover{transform:translateY(-3px);box-shadow:0 14px 36px #4f46e544}
+.top{backdrop-filter:blur(14px);background:color-mix(in srgb,var(--c) 80%,transparent)}
+.top b{background:linear-gradient(90deg,var(--p),var(--p2));-webkit-background-clip:text;color:transparent;font-size:1.15rem}
+.kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.kpi div{padding:16px;border-radius:16px;color:#fff;background:linear-gradient(135deg,var(--p),var(--p2));animation:pop .6s both}.kpi div:nth-child(2){background:linear-gradient(135deg,#16a34a,#84cc16)}.kpi div:nth-child(3){background:linear-gradient(135deg,#f97316,#dc2626)}.kpi div:nth-child(4){background:linear-gradient(135deg,#a855f7,#ec4899)}
+.kpi b{font-size:1.9rem;display:block}
+@keyframes pop{from{opacity:0;transform:scale(.7)}}
+.bar{height:9px;border-radius:9px;background:var(--b);margin:6px 0;overflow:hidden}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--p),var(--p2));transition:width 1s}
+textarea{width:100%;font:inherit;border-radius:10px;border:1px solid var(--b);padding:9px;background:var(--bg);color:var(--t);min-height:90px}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style></head><body>
+<div class="top"><div><b>Faculty Dashboard</b><small id="inf"></small></div>
+<div><button class="g" onclick="tg()">🌓</button> <button class="g" onclick="ins()">ℹ️</button> <button onclick="sessionStorage.clear();location='index.html'">Logout</button></div></div>
+<div class="tabs" id="tabs"></div><main id="v"><p class="m">Loading...</p></main>
+<div id="toast"></div><div id="mod" class="mod" style="display:none"></div>
+<script>
+const GAS='PASTE_YOUR_WEB_APP_URL_HERE';
+const $=i=>document.getElementById(i),S=JSON.parse(sessionStorage.u||'null');
+if(!S||S.role!='faculty'||S.mustReset)location='index.html';
+const E=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function tg(){const t=document.documentElement.dataset.t=='dark'?'light':'dark';document.documentElement.dataset.t=t;localStorage.t=t}
+async function api(a,d={}){const r=await fetch(GAS,{method:'POST',body:JSON.stringify({action:a,email:S.email,password:S.password,...d})});return r.json()}
+function toast(m){const t=$('toast');t.textContent=m;t.className='s';setTimeout(()=>t.className='',3000)}
+function ins(){$('mod').style.display='grid';$('mod').innerHTML=`<div><h3>General instructions</h3><ol>
+<li>Settings: fill college details, academic year and semester first (used in reports).</li>
+<li>Electives: create Elective 1, 2... for a year, then add courses with a maximum seat limit.</li>
+<li>Students pick courses first come, first served. Full courses are blocked automatically.</li>
+<li>Lock an elective to stop students editing; unlock to allow changes again.</li>
+<li>Status: see who has not submitted. Report: download Excel or PDF by year and section.</li>
+<li>Add students (mail, year, section, reg no) in the Users sheet.</li></ol><br><button onclick="sessionStorage.ins=1;$('mod').style.display='none'">Got it</button></div>`}
+let D,tab='da',RP;
+const T={da:'Dashboard',el:'Electives',st:'Status',stu:'Students',rp:'Report',se:'Settings'};
+async function load(){const r=await api('faculty');if(!r.ok){toast(r.error);return}D=r;show()}
+function show(){
+ $('inf').textContent=`${D.settings.AcademicYear} · Semester ${D.settings.Semester}`;
+ $('tabs').innerHTML=Object.keys(T).map(k=>`<button class="${tab==k?'on':'g'}" onclick="tab='${k}';show()">${T[k]}</button>`).join('');
+ $('v').innerHTML=({da:vDa,el:vEl,st:vSt,stu:vStu,rp:vRp,se:vSe})[tab]();if(tab=='rp')rpPrev();if(tab=='da')anim()}
+const yrs=[1,2,3,4].map(y=>`<option>${y}</option>`).join('');
+function vEl(){
+ return `<div class="card"><h3>New elective</h3><div class="r"><input id="en" placeholder="Elective 1"><select id="ey">${yrs}</select><button onclick="addEl()">Create</button></div></div>`+
+ D.electives.map(e=>{const L=e.Locked=='YES';return `<div class="card"><h3>${E(e.Name)} <span class="m">Year ${e.Year}</span></h3>
+ <button class="${L?'g':''}" onclick="lock('${e.ID}',${!L})">${L?'🔓 Unlock':'🔒 Lock students'}</button> <button class="d" onclick="delEl('${e.ID}')">Delete</button>`+
+ D.courses.filter(c=>c.ElectiveID==e.ID).map(c=>`<div class="row"><span><b>${E(c.Code)}</b> ${E(c.Name)}<br><span class="m">${D.selections.filter(s=>s.CourseID==c.ID).length} / ${c.Max} students</span></span><span><button class="g" onclick="setMax('${c.ID}',${c.Max})">✎ Max</button> <button class="d" onclick="delC('${c.ID}')">✕</button></span></div>`).join('')+
+ `<div class="r" style="margin-top:8px"><input id="c${e.ID}" placeholder="Course code"><input id="n${e.ID}" placeholder="Course name"><input id="x${e.ID}" type="number" min="1" placeholder="Max students"><button onclick="addC('${e.ID}')">Add course</button></div></div>`}).join('')}
+async function act(a,d){const r=await api(a,d);toast(r.ok?'Saved ✔':r.error);if(r.ok)load()}
+function addEl(){if(!$('en').value.trim())return toast('Enter elective name');act('addElective',{name:$('en').value.trim(),year:$('ey').value})}
+function lock(id,l){act('lock',{id,locked:l})}
+function delEl(id){confirm('Delete elective with its courses and selections?')&&act('delElective',{id})}
+function delC(id){confirm('Delete this course and its selections?')&&act('delCourse',{id})}
+function addC(id){const c=$('c'+id).value.trim(),n=$('n'+id).value.trim(),x=$('x'+id).value;if(!c||!n||!(x>0))return toast('Fill code, name and max students');act('addCourse',{electiveId:id,code:c,name:n,max:x})}
+function setMax(id,m){const v=prompt('New max students',m);v&&+v>0&&act('setMax',{id,max:v})}
+function vDa(){
+ const tot=D.students.length,cs=D.courses,seats=cs.reduce((a,c)=>a+Number(c.Max),0),taken=D.selections.length,lk=D.electives.filter(e=>e.Locked=='YES').length;
+ return `<div class="kpi"><div><b data-n="${tot}">0</b>Students</div><div><b data-n="${taken}">0</b>Registrations</div><div><b data-n="${seats-taken}">0</b>Seats left</div><div><b data-n="${lk}">0</b>Locked of ${D.electives.length}</div></div>`+
+ D.electives.map(e=>`<div class="card"><h3>${E(e.Name)} <span class="m">Year ${e.Year}</span></h3>`+D.courses.filter(c=>c.ElectiveID==e.ID).map(c=>{const n=D.selections.filter(s=>s.CourseID==c.ID).length;return `<div><span class="m">${E(c.Code)} ${E(c.Name)} - ${n}/${c.Max}${n>=c.Max?' (FULL)':''}</span><div class="bar"><i data-w="${Math.min(100,n/c.Max*100)}"></i></div></div>`}).join('')+`</div>`).join('')}
+function anim(){document.querySelectorAll('[data-n]').forEach(el=>{const t=+el.dataset.n;let i=0;const k=setInterval(()=>{i+=Math.max(1,t/30);if(i>=t){i=t;clearInterval(k)}el.textContent=Math.round(i)},25)});setTimeout(()=>document.querySelectorAll('[data-w]').forEach(b=>b.style.width=b.dataset.w+'%'),80)}
+function vStu(){return `<div class="card"><h3>Import students</h3><p class="m">One per line: email,name,year,section,regno,temp password (optional)</p><textarea id="imp" placeholder="ravi@kcet.ac.in,Ravi,3,A,REG101,pass123"></textarea><button onclick="imp()">Import</button></div>
+<div class="card"><h3>Students (${D.students.length})</h3>${D.students.map(s=>`<div class="row"><span>${E(s.regno)} ${E(s.name)}<br><span class="m">Year ${s.year} · Sec ${E(s.section)}</span></span><button class="g" onclick="rs('${E(s.email)}')">Reset password</button></div>`).join('')||'<p class="m">No students yet.</p>'}</div>`}
+async function imp(){const l=$('imp').value.split('\n').map(x=>x.split(',').map(y=>y.trim())).filter(x=>x[0]);if(!l.length)return toast('Paste at least one line');const r=await api('importUsers',{list:l});toast(r.ok?r.added+' students added':r.error);load()}
+function rs(t){const p=prompt('Temporary password for '+t,'welcome123');p&&act('resetUser',{target:t,temp:p})}
+function vSt(){
+ return D.electives.map(e=>{const st=D.students.filter(s=>s.year==e.Year),sub=new Set(D.selections.filter(s=>s.ElectiveID==e.ID).map(s=>s.Email)),ns=st.filter(s=>!sub.has(s.email));
+ return `<div class="card"><h3>${E(e.Name)} <span class="m">Year ${e.Year}</span></h3><div class="st"><div><b>${st.length}</b>Total</div><div><b class="ok">${st.length-ns.length}</b>Submitted</div><div><b class="bad">${ns.length}</b>Not submitted</div></div>
+ ${ns.length?`<details style="margin-top:10px"><summary>Not submitted students</summary>${ns.map(s=>`<div class="row"><span>${E(s.regno)} ${E(s.name)}</span><span class="m">Sec ${E(s.section)}</span></div>`).join('')}</details>`:''}</div>`}).join('')||'<div class="card">No electives yet.</div>'}
+function vRp(){return `<div class="card"><h3>Year and section report</h3><div class="r"><select id="ry" onchange="secs();rpPrev()">${yrs}</select><select id="rs" onchange="rpPrev()"></select><button onclick="xl()">Excel</button><button onclick="pdf()">PDF</button></div></div><div class="card tw" id="pv"></div>`}
+function secs(){const y=$('ry').value,s=[...new Set(D.students.filter(x=>x.year==y).map(x=>x.section))].sort();$('rs').innerHTML='<option value="">All sections</option>'+s.map(x=>`<option>${E(x)}</option>`).join('')}
+function rpPrev(){if(!$('rs').options.length)secs();RP=rep();$('pv').innerHTML=`<table><tr>${RP.head.map(h=>`<th>${E(h)}</th>`).join('')}</tr>${RP.body.map(r=>`<tr>${r.map(c=>`<td>${E(c)}</td>`).join('')}</tr>`).join('')}</table>`}
+function rep(){
+ const y=$('ry').value,sc=$('rs').value,els=D.electives.filter(e=>e.Year==y),
+ st=D.students.filter(s=>s.year==y&&(!sc||s.section==sc)).sort((a,b)=>String(a.regno).localeCompare(String(b.regno)));
+ return{head:['S.No','Reg No','Name','Section',...els.map(e=>e.Name)],
+ body:st.map((s,i)=>[i+1,s.regno,s.name,s.section,...els.map(e=>{const m=D.selections.find(x=>x.Email==s.email&&x.ElectiveID==e.ID),c=m&&D.courses.find(c=>c.ID==m.CourseID);return c?c.Code+' - '+c.Name:'Not submitted'})]),
+ T:[D.settings.College,D.settings.Department,`Academic Year: ${D.settings.AcademicYear}  |  Semester: ${D.settings.Semester}`,`Professional Elective Report - Year ${y}${sc?' - Section '+sc:' - All Sections'}`]}}
+function xl(){rpPrev();const n=RP.head.length,ws=XLSX.utils.aoa_to_sheet([...RP.T.map(t=>[t]),[],RP.head,...RP.body]);
+ ws['!merges']=[0,1,2,3].map(r=>({s:{r,c:0},e:{r,c:n-1}}));ws['!cols']=RP.head.map((h,i)=>({wch:i<2?12:i==2?26:i==3?9:34}));
+ const wb=XLSX.utils.book_new();XLSX.utils.book_append_sheet(wb,ws,'Report');XLSX.writeFile(wb,'Elective_Report.xlsx')}
+function pdf(){rpPrev();const d=new jspdf.jsPDF({orientation:'landscape'}),w=d.internal.pageSize.getWidth();
+ d.setFont('helvetica','bold').setFontSize(15);d.text(RP.T[0],w/2,14,{align:'center'});d.setFontSize(12);d.text(RP.T[1],w/2,21,{align:'center'});
+ d.setFont('helvetica','normal').setFontSize(11);d.text(RP.T[2],w/2,28,{align:'center'});d.text(RP.T[3],w/2,35,{align:'center'});
+ d.autoTable({head:[RP.head],body:RP.body,startY:41,styles:{fontSize:9},headStyles:{fillColor:[79,70,229]}});d.save('Elective_Report.pdf')}
+function vSe(){const s=D.settings;return `<div class="card"><h3>Report settings</h3>${[['College','College name'],['Department','Department'],['AcademicYear','Academic year'],['Semester','Semester']].map(([k,l])=>`<label class="m">${l}</label><input id="s_${k}" value="${E(s[k])}">`).join('')}<br><button onclick="saveS()">Save settings</button></div>`}
+function saveS(){const o={};['College','Department','AcademicYear','Semester'].forEach(k=>o[k]=$('s_'+k).value.trim());act('saveSettings',{settings:o})}
+load();if(sessionStorage.ins!='1')ins();
+</script></body></html>
